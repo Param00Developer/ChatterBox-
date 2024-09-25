@@ -1,20 +1,19 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Room
+from .forms import RoomForm
 
-
-rooms = [
-    {'id': 1, 'name': 'Python'},
-    {'id': 2, 'name': 'c++'},
-    {'id': 3, 'name': 'c#'}
-]
+rooms =Room.objects.all()
 # Create your views here.
 def home(req):
     # return HttpResponse("<h1>Home page</h1>")
-    room =Room.objects.all()
-    print("🚀 ~ room:", room)
     return render(req,'base/home.html',{'rooms':rooms})
 
 def room(req,pk):
-    print("🚀 ~ pk:", pk)
-    return render(req,"base/room.html")
+    data=Room.objects.get(id=pk)
+    return render(req,"base/room.html",{'room':data})
+
+def createRoom(req):
+    form=RoomForm()
+    context={'form':form}
+    return render(req,'base/room_form.html',context)
