@@ -5,8 +5,10 @@
     <div>
         {%for room in rooms%}
         <div>
+            <p>@{{room.host.username}}  <a href="{%url 'update-room' room.id %}">Edit</a> <a href="{%url 'delete-room' room.id %}">Delete</a></p>
             {{room.id}}--<a href='/room/{{room.id}}'>{{room.name}}</a>
         </div>
+        <hr>
         {%endfor%}
     </div>
 </div>
