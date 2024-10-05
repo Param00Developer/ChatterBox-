@@ -2,6 +2,6 @@
     {% csrf_token %}
     <p>Are you sure you want to delete "{{obj}}"?</p>
 
-    <a href="{{req.META.HTTP_REFERENCE}}">Go Back</a>
+    <a href="{{prev_url}}">Go Back</a>
     <input type="submit" value="confirm"/>
 </form>

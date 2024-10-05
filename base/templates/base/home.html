@@ -1,14 +1,42 @@
-<h1>____Home Page____</h1>
-<div>
-    <a href={%url 'create-room'%}>Create Room</a><hr>
-    <h2>_____Overview___</h2>
+{%extends 'main.html'%}
+
+{%block content%}
+<style>
+    .home-container {
+    display: grid;
+    grid-template-columns: 1fr 3fr 1fr;}
+</style>
+<div class="home-container">
     <div>
-        {%for room in rooms%}
+        <h3>Browser Topics</h3>
         <div>
-            <p>@{{room.host.username}}  <a href="{%url 'update-room' room.id %}">Edit</a> <a href="{%url 'delete-room' room.id %}">Delete</a></p>
-            {{room.id}}--<a href='/room/{{room.id}}'>{{room.name}}</a>
+            <a href="{%url 'home'%}">All</a>
         </div>
-        <hr>
+        {%for  topic in topics%}
+            <a href="{%url 'home'%}?q={{topic.name}}">{{topic.name}}</a><br>
         {%endfor%}
+
+    </div>
+    <div>
+        <h5>{{room_count}} rooms avail</h5>
+        <a href={%url 'create-room'%}>Create Room</a><hr>
+        <h2>_____Overview___</h2>
+        <div>
+            {%for room in rooms%}
+            <div>
+                <p>@{{room.host.username}}  <br>
+                {%if request.user == room.host %}
+                    <a href="{%url 'update-room' room.id %}">Edit</a> 
+                    <a href="{%url 'delete-room' room.id %}">Delete</a></p>
+                {%endif%}
+                {{room.id}}--<a href='/room/{{room.id}}'>{{room.name}}</a>
+            </div>
+            <hr>
+            {%endfor%}
+        </div>
+    </div>
+    <div>
+        {%include 'base/activity_component.html' %}
     </div>
 </div>
+{%endblock%}
