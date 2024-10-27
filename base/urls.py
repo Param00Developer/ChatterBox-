@@ -15,4 +15,6 @@ urlpatterns = [
     path("update-user", views.updateProfile, name="update-user"),
     path("topics", views.topicPage, name="topics"),
     path("activity", views.activityPage, name="activity"),
+    path("verify-email", views.verifyEmail, name="verify-email"),
+    path("verify-otp/<str:email>", views.verifyOtp, name="verify-otp"),
 ]

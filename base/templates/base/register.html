@@ -15,10 +15,10 @@
         <form class="form" action="" method="POST">
           {%csrf_token%}
           <div class="form__group form__group">
-            <label for="room_name">Username</label>
+            <label for="room_name">Email</label>
             <input
               id="username"
-              name="username"
+              name="email"
               type="text"
               placeholder="e.g. dennis_ivy"
             />
@@ -56,7 +56,7 @@
 
         <div class="auth__action">
           <p>Haven't signed up yet?</p>
-          <a href="{%url 'register'%}" class="btn btn--link">Sign Up</a>
+          <a href="{%url 'verify-email'%}" class="btn btn--link">Sign Up</a>
         </div>
       </div>
     </div>

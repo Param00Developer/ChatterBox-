@@ -1,14 +1,21 @@
+import json
+import random
 from django.shortcuts import render,redirect,HttpResponse
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import  authenticate,login,logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
 from django.db.models import  Q
-from .models import Room,Topic,Message,User
-from .forms import RoomForm,UserForm
+from .models import Room,Topic,Message,User,OtpToken
+from .forms import RoomForm,UserForm,NewUserCreationForm
+from django.utils import timezone
+from datetime import datetime ,timedelta
+from django.forms.models import model_to_dict
+
 
 rooms =Room.objects.all()
+generateRandomOtp=lambda :''.join([str(random.randint(0, 9)) for _ in range(6)])
+
 # Create your views here.
 def home(req):
     q=req.GET.get('q') if req.GET.get('q') else ''
@@ -87,17 +94,18 @@ def deleteMessage(req,pk):
     if req.method=='POST':
         msg.delete()
         return redirect('home')
-    return render(req,'base/delete.html',{'obj':msg})
+    return render(req,'base/delete.html',{'obj':msg,'prev_url':req.META['HTTP_REFERER']})
 
 def loginPage(req):
     page='Login'
     if req.user.is_authenticated:
         return redirect('home')
     if  req.method=='POST':
-        username=req.POST.get('username')
+        email=req.POST.get('email')
         password=req.POST.get('password')
+        print(email,password)
         try:
-            user=User.objects.get(username=username)
+            user=User.objects.get(email=email)
             print(user)
             user=authenticate(req,username=user,password=password)
             if  user is not None:
@@ -116,10 +124,10 @@ def logoutUser(req):
     return redirect('home')
 
 def registerUser(req):
-    form=UserCreationForm()
+    form=NewUserCreationForm()
     if req.method=='POST':
         try:
-            form=UserCreationForm(req.POST)
+            form=NewUserCreationForm(req.POST)
             if form.is_valid():
                 user=form.save(commit=False)
                 user.username=user.username.lower()
@@ -145,12 +153,22 @@ def userProfile(req,pk):
 @login_required(login_url='login')
 def  updateProfile(req):
     user=req.user
-    form=UserForm(instance=user)
+    form=NewUserCreationForm(instance=user)
     if req.method=="POST":
-        form=UserForm(req.POST,instance=user)
+        if(req.user.username!=req.POST["username"]):
+            user.username=req.POST["username"]
+            user.save()
+        form=NewUserCreationForm(req.POST,req.FILES,instance=user)
+        errors=json.loads(form.errors.as_json())
+        # user_name_error=errors.pop("username",None)
         if form.is_valid():
             form.save()
+            login(req,user)
             return redirect('user-profile',user.id)
+        else:
+            for err in errors:
+                messages.error(req,err[0].message)
+    form.instance.username=req.user.username
     context={'form':form}
     return render(req,'base/edit-user.html',context)
 
@@ -164,3 +182,35 @@ def activityPage(req):
     room_messages=Room.objects.all()
     context={'room_messages':room_messages}
     return render(req,"base/activity.html",context)
+
+def verifyEmail(req):
+    if req.method=="POST":
+        email=req.POST["email"]
+        data={
+        'expiresAt': timezone.now() + timedelta(minutes=3),  # Use timezone-aware datetime
+        'otp': generateRandomOtp()
+        }
+        print("-----",data)
+        otpData=OtpToken.objects.update_or_create(email=email,defaults=data)
+        messages.success(req,"An Otp is send to your email")
+        return redirect('verify-otp',email)
+    context={'step':1}
+    return render(req,'base/verify-email.html',context)
+
+def verifyOtp(req,email):
+    if req.method=='POST':
+        otp=req.POST['otp']
+        otpData=OtpToken.objects.get(email=email)
+        if(not otpData):
+            return redirect('verifyEmail')
+        if(otpData.expiresAt<timezone.now()):
+            messages.warning(req,"The Otp has expired , get a new OTP !")
+            return  redirect('verify-email')
+        elif (otpData.otp==otp) :
+            messages.success(req,"Account verified successfully !! You can now fill details to sign up ..")
+            user=User.objects.create(email=email)
+            login(req,user)
+            return redirect('update-user')
+        else:
+            messages.warning(req,"Invalid Otp !!..")
+    return render(req,'base/verify-email.html')

@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+import os
+load_dotenv()
 """
 Django settings for studybud project.
 
@@ -114,6 +117,16 @@ USE_I18N = True
 
 USE_TZ = True
 
+
+# Email  variables
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_USER") 
+EMAIL_HOST_PASSWORD =os.getenv("EMAIL_APP_PASSWORD")     #App password here
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
